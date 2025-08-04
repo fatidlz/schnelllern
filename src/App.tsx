@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, BookOpen, Heart, Volume2, Star } from 'lucide-react'
-import vokabelnData from './data/vokabeln.json'
+import vocabularyData from './data/vocabulary.json'
 
 interface VocabularyItem {
   id: string
@@ -12,12 +12,18 @@ interface VocabularyItem {
 
 type Level = 'A1' | 'A2' | 'B1' | 'B2'
 
+// Define the structure of the imported vocabulary data
+interface VocabularyData {
+  A1: { id: string; wort: string; bedeutung: string }[]
+  A2: { id: string; wort: string; bedeutung: string }[]
+  B1: { id: string; wort: string; bedeutung: string }[]
+  B2: { id: string; wort: string; bedeutung: string }[]
+}
+
 function App() {
   const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([])
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)
-  const [newWord, setNewWord] = useState('')
-  const [newMeaning, setNewMeaning] = useState('')
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
 
   // Load vocabulary from localStorage or default data
@@ -26,10 +32,10 @@ function App() {
     if (saved) {
       setVocabulary(JSON.parse(saved))
     } else {
-      // Load default vocabulary from vokabeln.json file for selected level
-      const levelVocabulary = selectedLevel === 'B2' ? vokabelnData : []
-      const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
-        id: `vokabel_${index}`,
+      // Load default vocabulary from vocabulary.json file for selected level
+      const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
+      const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item) => ({
+        id: item.id,
         wort: item.wort,
         bedeutung: item.bedeutung,
         mastered: false
@@ -46,9 +52,9 @@ function App() {
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
     setSelectedLevel(level)
-    const levelVocabulary = level === 'B2' ? vokabelnData : []
-    const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
-      id: `vokabel_${index}`,
+    const levelVocabulary = (vocabularyData as VocabularyData)[level] || []
+    const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item) => ({
+      id: item.id,
       wort: item.wort,
       bedeutung: item.bedeutung,
       mastered: false
@@ -83,21 +89,6 @@ function App() {
         )
       )
       startPractice()
-    }
-  }
-
-  // Add new word
-  const addWord = () => {
-    if (newWord.trim() && newMeaning.trim()) {
-      const newItem: VocabularyItem = {
-        id: Date.now().toString(),
-        wort: newWord.trim(),
-        bedeutung: newMeaning.trim(),
-        mastered: false
-      }
-      setVocabulary(prev => [...prev, newItem])
-      setNewWord('')
-      setNewMeaning('')
     }
   }
 
@@ -192,35 +183,6 @@ function App() {
               <div className="text-2xl font-bold text-orange-600">{totalCount - masteredCount}</div>
               <div className="text-sm text-gray-600">Zu lernen</div>
             </div>
-          </div>
-        </div>
-
-        {/* Add new word */}
-        <div className="card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Plus className="w-5 h-5 mr-2 text-rose-500" />
-            Neue Vokabel
-          </h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Deutsches Wort..."
-              value={newWord}
-              onChange={(e) => setNewWord(e.target.value)}
-              className="input-field"
-              onKeyPress={(e) => e.key === 'Enter' && addWord()}
-            />
-            <input
-              type="text"
-              placeholder="Bedeutung..."
-              value={newMeaning}
-              onChange={(e) => setNewMeaning(e.target.value)}
-              className="input-field"
-              onKeyPress={(e) => e.key === 'Enter' && addWord()}
-            />
-            <button onClick={addWord} className="btn-primary w-full">
-              Hinzufügen
-            </button>
           </div>
         </div>
 
