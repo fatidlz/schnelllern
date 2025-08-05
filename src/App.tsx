@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { Plus, BookOpen, Heart, Volume2, Star } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Plus, BookOpen, Heart, Volume2, Star, Repeat, Undo2 } from 'lucide-react'
 import vocabularyData from './data/vocabulary.json'
 
 interface VocabularyItem {
@@ -11,6 +11,7 @@ interface VocabularyItem {
 }
 
 type Level = 'A1' | 'A2' | 'B1' | 'B2'
+type FilterType = 'all' | 'mastered' | 'unmastered'
 
 // Define the structure of the imported vocabulary data
 interface VocabularyData {
@@ -27,7 +28,9 @@ function App() {
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
+  const [filter, setFilter] = useState<FilterType>('all')
   const [isLoaded, setIsLoaded] = useState(false)
+  const practiceRef = useRef<HTMLDivElement>(null)
 
   const loadDefaultVocabulary = (level: Level): VocabularyItem[] => {
     const data = (vocabularyData as any).default || vocabularyData;
@@ -127,6 +130,24 @@ function App() {
     }
   }
 
+  // Repeat a word
+  const repeatWord = (word: VocabularyItem) => {
+    setCurrentWord(word)
+    setShowAnswer(false)
+    practiceRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  // Mark word as unlearned
+  const markAsUnlearned = (id: string) => {
+    setVocabulary(prev =>
+      prev.map(v =>
+        v.id === id
+          ? { ...v, mastered: false }
+          : v
+      )
+    )
+  }
+
   // Play pronunciation
   const playPronunciation = (text: string) => {
     if ('speechSynthesis' in window) {
@@ -222,7 +243,7 @@ function App() {
         </div>
 
         {/* Practice */}
-        <div className="card mb-6">
+        <div className="card mb-6" ref={practiceRef}>
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
             <BookOpen className="w-5 h-5 mr-2 text-rose-500" />
             Übung - {selectedLevel}
@@ -291,9 +312,49 @@ function App() {
         {/* Vocabulary list */}
         {vocabulary.length > 0 && (
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Meine Vokabeln - {selectedLevel}</h2>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {vocabulary.map((item) => (
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Meine Vokabeln - {selectedLevel}</h2>
+            </div>
+            <div className="flex space-x-2 mb-4">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  filter === 'all'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                Alle
+              </button>
+              <button
+                onClick={() => setFilter('mastered')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  filter === 'mastered'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                Gelernt
+              </button>
+              <button
+                onClick={() => setFilter('unmastered')}
+                className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                  filter === 'unmastered'
+                    ? 'bg-rose-600 text-white'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                Zu lernen
+              </button>
+            </div>
+            <div className="space-y-2">
+              {vocabulary
+                .filter(item => {
+                  if (filter === 'mastered') return item.mastered
+                  if (filter === 'unmastered') return !item.mastered
+                  return true
+                })
+                .map((item) => (
                 <div
                   key={item.id}
                   className={`p-3 rounded-lg border ${
@@ -307,9 +368,26 @@ function App() {
                       <div className="font-medium text-gray-900">{item.wort}</div>
                       <div className="text-sm text-gray-600">{item.bedeutung}</div>
                     </div>
-                    {item.mastered && (
-                      <Heart className="w-4 h-4 text-green-500" />
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => repeatWord(item)}
+                        className="p-1 text-blue-500 hover:text-blue-600"
+                        title="Wiederholen"
+                      >
+                        <Repeat className="w-4 h-4" />
+                      </button>
+                      {item.mastered ? (
+                        <button
+                          onClick={() => markAsUnlearned(item.id)}
+                          className="p-1 text-orange-500 hover:text-orange-600"
+                          title="Als 'Zu lernen' markieren"
+                        >
+                          <Undo2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <div className="w-6 h-6" /> // Placeholder for alignment
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
