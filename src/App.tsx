@@ -28,6 +28,7 @@ function App() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
   const [isLoaded, setIsLoaded] = useState(false)
+  const [showOnlyMastered, setShowOnlyMastered] = useState(false)
 
   const loadDefaultVocabulary = (level: Level): VocabularyItem[] => {
     const data = (vocabularyData as any).default || vocabularyData;
@@ -291,9 +292,25 @@ function App() {
         {/* Vocabulary list */}
         {vocabulary.length > 0 && (
           <div className="card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Meine Vokabeln - {selectedLevel}</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Meine Vokabeln - {selectedLevel}</h2>
+              <div className="flex items-center">
+                <span className="text-sm mr-2 text-gray-600">Nur Gelernte</span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showOnlyMastered}
+                    onChange={() => setShowOnlyMastered(!showOnlyMastered)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-rose-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500"></div>
+                </label>
+              </div>
+            </div>
             <div className="space-y-2 max-h-60 overflow-y-auto">
-              {vocabulary.map((item) => (
+              {vocabulary
+                .filter(item => !showOnlyMastered || item.mastered)
+                .map((item) => (
                 <div
                   key={item.id}
                   className={`p-3 rounded-lg border ${
