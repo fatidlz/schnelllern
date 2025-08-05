@@ -44,22 +44,32 @@ function App() {
   useEffect(() => {
     const storageKey = getStorageKey(selectedLevel)
     const saved = localStorage.getItem(storageKey)
+    let loadedVocab: VocabularyItem[] = []
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         const defaultVocab = loadDefaultVocabulary(selectedLevel);
-        // Load from default if localStorage is empty but default has words
         if (parsed.length === 0 && defaultVocab.length > 0) {
-          setVocabulary(defaultVocab);
+          loadedVocab = defaultVocab;
         } else {
-          setVocabulary(parsed);
+          loadedVocab = parsed;
         }
       } catch (e) {
         console.error("Failed to parse vocabulary from local storage", e)
-        setVocabulary(loadDefaultVocabulary(selectedLevel));
+        loadedVocab = loadDefaultVocabulary(selectedLevel);
       }
     } else {
-      setVocabulary(loadDefaultVocabulary(selectedLevel));
+      loadedVocab = loadDefaultVocabulary(selectedLevel);
+    }
+    setVocabulary(loadedVocab);
+
+    const currentWordIdKey = `schnelllern-current-word-id-${selectedLevel}`
+    const savedWordId = localStorage.getItem(currentWordIdKey)
+    if (savedWordId) {
+      const word = loadedVocab.find(w => w.id === savedWordId)
+      if (word) {
+        setCurrentWord(word)
+      }
     }
     setIsLoaded(true)
   }, [selectedLevel])
@@ -71,12 +81,22 @@ function App() {
     }
   }, [vocabulary, selectedLevel, isLoaded])
 
+  // Save current word to localStorage
+  useEffect(() => {
+    const currentWordIdKey = `schnelllern-current-word-id-${selectedLevel}`
+    if (currentWord) {
+      localStorage.setItem(currentWordIdKey, currentWord.id)
+    } else {
+      localStorage.removeItem(currentWordIdKey)
+    }
+  }, [currentWord, selectedLevel])
+
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
     setIsLoaded(false)
-    setSelectedLevel(level)
     setCurrentWord(null)
     setShowAnswer(false)
+    setSelectedLevel(level)
   }
 
   // Get random word for practice
