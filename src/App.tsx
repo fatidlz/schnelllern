@@ -14,10 +14,10 @@ type Level = 'A1' | 'A2' | 'B1' | 'B2'
 
 // Define the structure of the imported vocabulary data
 interface VocabularyData {
-  A1: { id: string; wort: string; bedeutung: string }[]
-  A2: { id: string; wort: string; bedeutung: string }[]
-  B1: { id: string; wort: string; bedeutung: string }[]
-  B2: { id: string; wort: string; bedeutung: string }[]
+  A1: { wort: string; bedeutung: string }[]
+  A2: { wort: string; bedeutung: string }[]
+  B1: { wort: string; bedeutung: string }[]
+  B2: { wort: string; bedeutung: string }[]
 }
 
 const getStorageKey = (level: Level) => `schnelllern-vocabulary-${level}`
@@ -27,6 +27,7 @@ function App() {
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
+  const [shouldStartPractice, setShouldStartPractice] = useState(false)
 
   // Load vocabulary from localStorage or default data
   useEffect(() => {
@@ -38,7 +39,7 @@ function App() {
       // Load default vocabulary from vocabulary.json file for selected level
       const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
       const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item) => ({
-        id: item.id,
+        id: item.wort,
         wort: item.wort,
         bedeutung: item.bedeutung,
         mastered: false
@@ -52,11 +53,21 @@ function App() {
     localStorage.setItem(getStorageKey(selectedLevel), JSON.stringify(vocabulary))
   }, [vocabulary, selectedLevel])
 
+  useEffect(() => {
+    if (shouldStartPractice && vocabulary.length > 0) {
+      startPractice()
+      setShouldStartPractice(false)
+    }
+  }, [vocabulary, shouldStartPractice])
+
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
     setSelectedLevel(level)
     setCurrentWord(null)
     setShowAnswer(false)
+    if (level === 'B2') {
+      setShouldStartPractice(true)
+    }
   }
 
   // Get random word for practice
