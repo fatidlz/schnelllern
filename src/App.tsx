@@ -27,13 +27,27 @@ function App() {
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null)
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
+  const [isLoaded, setIsLoaded] = useState(false)
 
   // Load vocabulary from localStorage or default data
   useEffect(() => {
     const storageKey = getStorageKey(selectedLevel)
     const saved = localStorage.getItem(storageKey)
     if (saved) {
-      setVocabulary(JSON.parse(saved))
+      try {
+        setVocabulary(JSON.parse(saved))
+      } catch (e) {
+        console.error("Failed to parse vocabulary from local storage", e)
+        // Fallback to default if parsing fails
+        const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
+        const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
+          id: item.id || `${selectedLevel}-${item.wort}-${index}`,
+          wort: item.wort,
+          bedeutung: item.bedeutung,
+          mastered: false
+        }))
+        setVocabulary(defaultVocabulary)
+      }
     } else {
       // Load default vocabulary from vocabulary.json file for selected level
       const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
@@ -45,15 +59,20 @@ function App() {
       }))
       setVocabulary(defaultVocabulary)
     }
+    setIsLoaded(true)
   }, [selectedLevel])
 
   // Save vocabulary to localStorage
   useEffect(() => {
-    localStorage.setItem(getStorageKey(selectedLevel), JSON.stringify(vocabulary))
-  }, [vocabulary, selectedLevel])
+    if (isLoaded) {
+      localStorage.setItem(getStorageKey(selectedLevel), JSON.stringify(vocabulary))
+    }
+  }, [vocabulary, selectedLevel, isLoaded])
 
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
+    if (level === selectedLevel) return
+    setIsLoaded(false)
     setSelectedLevel(level)
     setCurrentWord(null)
     setShowAnswer(false)
