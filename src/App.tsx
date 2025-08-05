@@ -29,35 +29,37 @@ function App() {
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
   const [isLoaded, setIsLoaded] = useState(false)
 
+  const loadDefaultVocabulary = (level: Level): VocabularyItem[] => {
+    const data = (vocabularyData as any).default || vocabularyData;
+    const levelVocabulary = (data as VocabularyData)[level] || [];
+    return levelVocabulary.map((item, index) => ({
+      id: item.id || `${level}-${item.wort}-${index}`,
+      wort: item.wort,
+      bedeutung: item.bedeutung,
+      mastered: false
+    }));
+  };
+
   // Load vocabulary from localStorage or default data
   useEffect(() => {
     const storageKey = getStorageKey(selectedLevel)
     const saved = localStorage.getItem(storageKey)
     if (saved) {
       try {
-        setVocabulary(JSON.parse(saved))
+        const parsed = JSON.parse(saved);
+        const defaultVocab = loadDefaultVocabulary(selectedLevel);
+        // Load from default if localStorage is empty but default has words
+        if (parsed.length === 0 && defaultVocab.length > 0) {
+          setVocabulary(defaultVocab);
+        } else {
+          setVocabulary(parsed);
+        }
       } catch (e) {
         console.error("Failed to parse vocabulary from local storage", e)
-        // Fallback to default if parsing fails
-        const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
-        const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
-          id: item.id || `${selectedLevel}-${item.wort}-${index}`,
-          wort: item.wort,
-          bedeutung: item.bedeutung,
-          mastered: false
-        }))
-        setVocabulary(defaultVocabulary)
+        setVocabulary(loadDefaultVocabulary(selectedLevel));
       }
     } else {
-      // Load default vocabulary from vocabulary.json file for selected level
-      const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
-      const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
-        id: item.id || `${selectedLevel}-${item.wort}-${index}`,
-        wort: item.wort,
-        bedeutung: item.bedeutung,
-        mastered: false
-      }))
-      setVocabulary(defaultVocabulary)
+      setVocabulary(loadDefaultVocabulary(selectedLevel));
     }
     setIsLoaded(true)
   }, [selectedLevel])
