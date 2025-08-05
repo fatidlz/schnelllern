@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Plus, BookOpen, Heart, Volume2, Star } from 'lucide-react'
+import { Plus, BookOpen, Heart, Volume2, Star, FileText } from 'lucide-react'
 import vocabularyData from './data/vocabulary.json'
+import Quiz from './components/Quiz'
 
-interface VocabularyItem {
+export interface VocabularyItem {
   id: string
   wort: string
   bedeutung: string
@@ -28,6 +29,7 @@ function App() {
   const [showAnswer, setShowAnswer] = useState(false)
   const [selectedLevel, setSelectedLevel] = useState<Level>('B2')
   const [isLoaded, setIsLoaded] = useState(false)
+  const [showQuiz, setShowQuiz] = useState(false)
 
   const loadDefaultVocabulary = (level: Level): VocabularyItem[] => {
     const data = (vocabularyData as any).default || vocabularyData;
@@ -228,7 +230,9 @@ function App() {
             Übung - {selectedLevel}
           </h2>
           
-          {vocabulary.length === 0 ? (
+          {showQuiz ? (
+            <Quiz vocabulary={vocabulary} />
+          ) : vocabulary.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">
                 {selectedLevel === 'B2' 
@@ -282,9 +286,15 @@ function App() {
               )}
             </div>
           ) : (
-            <button onClick={startPractice} className="btn-primary w-full">
-              Übung starten
-            </button>
+            <div className="flex space-x-3">
+              <button onClick={startPractice} className="btn-primary w-full">
+                Übung starten
+              </button>
+              <button onClick={() => setShowQuiz(true)} className="btn-secondary w-full flex items-center justify-center">
+                <FileText className="w-4 h-4 mr-2" />
+                Prüfung
+              </button>
+            </div>
           )}
         </div>
 
