@@ -14,10 +14,10 @@ type Level = 'A1' | 'A2' | 'B1' | 'B2'
 
 // Define the structure of the imported vocabulary data
 interface VocabularyData {
-  A1: { id: string; wort: string; bedeutung: string }[]
-  A2: { id: string; wort: string; bedeutung: string }[]
-  B1: { id: string; wort: string; bedeutung: string }[]
-  B2: { id: string; wort: string; bedeutung: string }[]
+  A1: { id?: string; wort: string; bedeutung: string }[]
+  A2: { id?: string; wort: string; bedeutung: string }[]
+  B1: { id?: string; wort: string; bedeutung: string }[]
+  B2: { id?: string; wort: string; bedeutung: string }[]
 }
 
 const getStorageKey = (level: Level) => `schnelllern-vocabulary-${level}`
@@ -37,8 +37,8 @@ function App() {
     } else {
       // Load default vocabulary from vocabulary.json file for selected level
       const levelVocabulary = (vocabularyData as VocabularyData)[selectedLevel] || []
-      const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item) => ({
-        id: item.id,
+      const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item, index) => ({
+        id: item.id || `${selectedLevel}-${item.wort}-${index}`,
         wort: item.wort,
         bedeutung: item.bedeutung,
         mastered: false
