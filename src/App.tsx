@@ -20,6 +20,8 @@ interface VocabularyData {
   B2: { id: string; wort: string; bedeutung: string }[]
 }
 
+const getStorageKey = (level: Level) => `schnelllern-vocabulary-${level}`
+
 function App() {
   const [vocabulary, setVocabulary] = useState<VocabularyItem[]>([])
   const [currentWord, setCurrentWord] = useState<VocabularyItem | null>(null)
@@ -28,7 +30,8 @@ function App() {
 
   // Load vocabulary from localStorage or default data
   useEffect(() => {
-    const saved = localStorage.getItem('schnelllern-vocabulary')
+    const storageKey = getStorageKey(selectedLevel)
+    const saved = localStorage.getItem(storageKey)
     if (saved) {
       setVocabulary(JSON.parse(saved))
     } else {
@@ -46,20 +49,12 @@ function App() {
 
   // Save vocabulary to localStorage
   useEffect(() => {
-    localStorage.setItem('schnelllern-vocabulary', JSON.stringify(vocabulary))
-  }, [vocabulary])
+    localStorage.setItem(getStorageKey(selectedLevel), JSON.stringify(vocabulary))
+  }, [vocabulary, selectedLevel])
 
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
     setSelectedLevel(level)
-    const levelVocabulary = (vocabularyData as VocabularyData)[level] || []
-    const defaultVocabulary: VocabularyItem[] = levelVocabulary.map((item) => ({
-      id: item.id,
-      wort: item.wort,
-      bedeutung: item.bedeutung,
-      mastered: false
-    }))
-    setVocabulary(defaultVocabulary)
     setCurrentWord(null)
     setShowAnswer(false)
   }
