@@ -71,7 +71,6 @@ function App() {
 
   // Load vocabulary for selected level
   const loadLevelVocabulary = (level: Level) => {
-    if (level === selectedLevel) return
     setIsLoaded(false)
     setSelectedLevel(level)
     setCurrentWord(null)
